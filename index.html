@@ -88,20 +88,39 @@
   color: #172033;
   z-index: 99999;
 }
+
 #ldf-hub-ai-open {
-  position: fixed; right: 22px; bottom: 22px;
-  background: #002B7F; color: white; border: 0;
-  border-radius: 28px; padding: 15px 20px;
-  font-weight: bold; cursor: pointer;
+  position: fixed;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #002B7F;
+  color: white;
+  border: 0;
+  border-radius: 28px;
+  padding: 15px 20px;
+  font-weight: bold;
+  cursor: pointer;
   box-shadow: 0 4px 18px #0003;
+  z-index: 99999;
 }
+
 #ldf-hub-ai-panel {
-  position: fixed; right: 20px; bottom: 82px;
+  position: fixed;
+  left: 22px;
+  top: 50%;
+  transform: translateY(-50%);
   width: min(360px, calc(100vw - 32px));
-  height: 480px; max-height: calc(100dvh - 110px);
-  background: white; border: 1px solid #d9e2f2;
-  border-radius: 16px; box-shadow: 0 8px 35px #0003;
-  overflow: hidden; display: flex; flex-direction: column;
+  height: 480px;
+  max-height: calc(100dvh - 32px);
+  background: white;
+  border: 1px solid #d9e2f2;
+  border-radius: 16px;
+  box-shadow: 0 8px 35px #0003;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  z-index: 99999;
 }
 #ldf-hub-ai-panel[hidden] { display: none; }
 .ldf-hub-ai-head {
