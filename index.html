@@ -50,6 +50,185 @@
 <script src="js/notifications.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/app.js"></script>
+
+  <!-- LDF AI ASSISTANTS FOR APPS SCRIPT -->
+<div id="ldf-hub-ai">
+  <button id="ldf-hub-ai-open" type="button">🤖 Ask LDF AI</button>
+
+  <section id="ldf-hub-ai-panel" hidden>
+    <div class="ldf-hub-ai-head">
+      <strong>LDF Learning & HOPE Assistants</strong>
+      <button id="ldf-hub-ai-close" type="button">×</button>
+    </div>
+
+    <label for="ldf-hub-ai-agent">Choose assistant</label>
+    <select id="ldf-hub-ai-agent">
+      <option value="learning">Learning Assistant</option>
+      <option value="hope">HOPE Assistant</option>
+    </select>
+
+    <div id="ldf-hub-ai-messages" aria-live="polite">
+      <p class="ldf-hub-ai-bubble">
+        Welcome! Choose an assistant and ask your question.
+      </p>
+    </div>
+
+    <form id="ldf-hub-ai-form">
+      <textarea id="ldf-hub-ai-input" maxlength="4000"
+        placeholder="Type your question..." required></textarea>
+      <button id="ldf-hub-ai-send" type="submit">Send</button>
+    </form>
+    <p id="ldf-hub-ai-status" role="status"></p>
+  </section>
+</div>
+
+<style>
+#ldf-hub-ai {
+  font-family: Arial, sans-serif;
+  color: #172033;
+  z-index: 99999;
+}
+#ldf-hub-ai-open {
+  position: fixed; right: 22px; bottom: 22px;
+  background: #002B7F; color: white; border: 0;
+  border-radius: 28px; padding: 15px 20px;
+  font-weight: bold; cursor: pointer;
+  box-shadow: 0 4px 18px #0003;
+}
+#ldf-hub-ai-panel {
+  position: fixed; right: 20px; bottom: 82px;
+  width: min(360px, calc(100vw - 32px));
+  height: 480px; max-height: calc(100dvh - 110px);
+  background: white; border: 1px solid #d9e2f2;
+  border-radius: 16px; box-shadow: 0 8px 35px #0003;
+  overflow: hidden; display: flex; flex-direction: column;
+}
+#ldf-hub-ai-panel[hidden] { display: none; }
+.ldf-hub-ai-head {
+  background: #002B7F; color: white; padding: 15px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+#ldf-hub-ai-close {
+  background: transparent; color: white; border: 0;
+  font-size: 26px; cursor: pointer;
+}
+#ldf-hub-ai-panel label {
+  padding: 10px 12px 4px; font-size: 12px;
+}
+#ldf-hub-ai-agent {
+  margin: 0 12px; padding: 9px;
+  border-radius: 8px; border: 1px solid #ccd5e5;
+}
+#ldf-hub-ai-messages {
+  flex: 1; overflow-y: auto; padding: 12px;
+  background: #f5f8ff;
+}
+.ldf-hub-ai-bubble {
+  white-space: pre-wrap; overflow-wrap: anywhere;
+  background: white; border: 1px solid #e0e6f0;
+  border-radius: 12px; padding: 10px; margin: 6px 0;
+  font-size: 14px; line-height: 1.5;
+}
+.ldf-hub-ai-user { background: #e1ebff; }
+#ldf-hub-ai-form { padding: 10px; display: flex; gap: 8px; }
+#ldf-hub-ai-input {
+  flex: 1; min-width: 0; height: 54px; resize: vertical;
+  padding: 9px; border: 1px solid #ccd5e5;
+  border-radius: 8px; font: inherit;
+}
+#ldf-hub-ai-send {
+  background: #0055D4; color: white; border: 0;
+  border-radius: 8px; padding: 10px 14px; cursor: pointer;
+}
+#ldf-hub-ai-send:disabled { opacity: .6; cursor: wait; }
+#ldf-hub-ai-status { margin: 0; padding: 0 12px 8px; font-size: 12px; }
+</style>
+
+<script>
+(() => {
+  const panel = document.getElementById("ldf-hub-ai-panel");
+  const open = document.getElementById("ldf-hub-ai-open");
+  const close = document.getElementById("ldf-hub-ai-close");
+  const agent = document.getElementById("ldf-hub-ai-agent");
+  const input = document.getElementById("ldf-hub-ai-input");
+  const messages = document.getElementById("ldf-hub-ai-messages");
+  const form = document.getElementById("ldf-hub-ai-form");
+  const send = document.getElementById("ldf-hub-ai-send");
+  const status = document.getElementById("ldf-hub-ai-status");
+
+  if (!panel || !open || !close || !agent || !input ||
+      !messages || !form || !send || !status) {
+    console.error("LDF AI: One or more widget elements are missing.");
+    return;
+  }
+
+  open.addEventListener("click", () => {
+    panel.hidden = false;
+    input.focus();
+  });
+
+  close.addEventListener("click", () => {
+    panel.hidden = true;
+  });
+
+  function addMessage(text, isUser) {
+    const p = document.createElement("p");
+    p.className = "ldf-hub-ai-bubble" +
+      (isUser ? " ldf-hub-ai-user" : "");
+    p.textContent = text;
+    messages.appendChild(p);
+    messages.scrollTop = messages.scrollHeight;
+    return p;
+  }
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const message = input.value.trim();
+    if (!message || send.disabled) return;
+
+    if (
+      typeof google === "undefined" ||
+      !google.script ||
+      !google.script.run
+    ) {
+      status.textContent =
+        "This page is not running inside Apps Script. Open the deployed web app URL.";
+      return;
+    }
+
+    addMessage(message, true);
+    input.value = "";
+    send.disabled = true;
+    status.textContent = "Connecting to LDF AI...";
+    const reply = addMessage("Please wait...", false);
+
+    google.script.run
+      .withSuccessHandler((data) => {
+        if (data && data.success === true && data.answer) {
+          reply.textContent = data.answer;
+          status.textContent = "Connected successfully.";
+        } else {
+          reply.textContent = "The assistant returned no answer.";
+          status.textContent = "Check the ldfAskAgent function in Code.gs.";
+        }
+        send.disabled = false;
+        input.focus();
+      })
+      .withFailureHandler((error) => {
+        reply.textContent = "The request failed.";
+        status.textContent =
+          "Apps Script error: " +
+          (error && error.message ? error.message : String(error));
+        console.error("LDF AI Apps Script error:", error);
+        send.disabled = false;
+      })
+      .ldfAskAgent(agent.value, message);
+  });
+})();
+</script>
+
+<!-- END LDF AI ASSISTANTS -->
+  
 </body>
   </html>
-</html>
